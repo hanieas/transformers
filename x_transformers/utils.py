@@ -18,11 +18,16 @@ def subsequent_mask(size):
 class Batch:
     """Object for holding a batch of data with mask during training."""
 
-    def __init__(self, src, tgt=None, pad=2):  # 2 = <blank>
-        self.src = src
-        self.src_mask = (src != pad).unsqueeze(-2)
+    def __init__(self, src=None, tgt=None, pad=2):
+        if src is not None:
+            self.src = src
+            self.src_mask = (src != pad).unsqueeze(-2)
         if tgt is not None:
-            self.tgt = tgt[:, :-1]
+            try:
+                self.tgt = tgt[:, :-1]
+            except:
+                print(tgt)
+                raise
             self.tgt_y = tgt[:, 1:]
             self.tgt_mask = self.make_std_mask(self.tgt, pad)
             self.ntokens = (self.tgt_y != pad).data.sum()
