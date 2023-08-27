@@ -15,6 +15,7 @@ def subsequent_mask(size):
         attn_shape), diagonal=1).type(torch.uint8)
     return subsequent_mask == 0
 
+
 class Batch:
     """Object for holding a batch of data with mask during training."""
 
@@ -40,3 +41,7 @@ class Batch:
             tgt_mask.data
         )
         return tgt_mask
+
+
+def scaled_softmax(logits: torch.Tensor, t: float) -> torch.Tensor:
+    return nn.functional.softmax(logits / t, dim=-1)

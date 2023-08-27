@@ -1,8 +1,10 @@
 from torch import nn
+from torch.nn.functional import log_softmax
 from .base import LayerNorm, PositionwiseFeedForward, Generator, PositionalEncoding, Embeddings
 from .utils import clones
 from .decoder import DecoderLayer
 from .attention import MultiHeadedAttention
+from .generators import generate
 
 
 class BaseDecoderGenerator(nn.Module):
@@ -32,8 +34,12 @@ class BaseDecoderGenerator(nn.Module):
         x = self.embed(x)
         x = self.pe(x)
         x = self.decoder.forward(x=x, tgt_mask=mask)
-        x = self.generator(x)
-        return x
+        logits = self.generator(x)
+        probs = log_softmax(logits, dim=-1)
+        return logits, probs
+
+    def generate(self, x, iterations, temperature=None, top_p=None, top_k=None):
+        return generate(self, x, iterations, temperature=temperature, top_p=top_p, top_k=top_k)
 
 
 class EncoderDecoder(nn.Module):
