@@ -27,27 +27,14 @@ class PositionalEncoding(nn.Module):
         return self.dropout(x)
 
 
-class InputEmbeddings(nn.Module):
-    def __init__(self, d_model, embedding):
-        super(InputEmbeddings, self).__init__()
-        self.lut = embedding
+class Embeddings(nn.Module):
+    def __init__(self, d_model, vocab):
+        super(Embeddings, self).__init__()
+        self.lut = nn.Embedding(vocab, d_model)
         self.d_model = d_model
 
     def forward(self, x):
         return self.lut(x) * math.sqrt(self.d_model)
-
-
-class OutputEmbeddings(nn.Module):
-    "Define standard linear + softmax generation step."
-
-    def __init__(self, embedding, vocab_size):
-        super(OutputEmbeddings, self).__init__()
-        self.lut = embedding
-        self.b = nn.Parameter(torch.zeros(vocab_size))
-        torch.nn.init.normal_(self.b)
-
-    def forward(self, x):
-        return torch.matmul(x, self.lut.weight.T) + self.b
 
 
 class PositionwiseFeedForward(nn.Module):
@@ -61,6 +48,17 @@ class PositionwiseFeedForward(nn.Module):
 
     def forward(self, x):
         return self.w_2(self.dropout(self.w_1(x).relu()))
+
+
+class Generator(nn.Module):
+    "Define standard linear + softmax generation step."
+
+    def __init__(self, d_model, vocab):
+        super(Generator, self).__init__()
+        self.proj = nn.Linear(d_model, vocab)
+
+    def forward(self, x):
+        return self.proj(x)
 
 
 class LayerNorm(nn.Module):
