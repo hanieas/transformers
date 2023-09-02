@@ -1,6 +1,6 @@
 from torch import nn
 from torch.nn.functional import log_softmax
-from .base import LayerNorm, PositionwiseFeedForward, Generator, PositionalEncoding, Embeddings
+from .base import LayerNorm, PositionwiseFeedForward, PositionalEncoding, Embeddings
 from .utils import clones
 from .decoder import DecoderLayer
 from .attention import MultiHeadedAttention
@@ -22,19 +22,19 @@ class BaseDecoderGenerator(nn.Module):
                     h=heads, d_model=d_model, dropout=dropout),
             ),
         )
-        self.embed = Embeddings(d_model, vocab_size)
+        self.in_embed = Embeddings(d_model, vocab_size)
         self.pe = PositionalEncoding(d_model=d_model, dropout=dropout)
-        self.generator = Generator(d_model=d_model, vocab=vocab_size)
+        self.out_embed = nn.Linear(d_model, vocab_size)
 
         for p in self.parameters():
             if p.dim() > 1:
                 nn.init.xavier_uniform_(p)
 
     def forward(self, x, mask):
-        x = self.embed(x)
+        x = self.in_embed(x)
         x = self.pe(x)
         x = self.decoder.forward(x=x, tgt_mask=mask)
-        logits = self.generator(x)
+        logits = self.out_embed(x)
         probs = log_softmax(logits, dim=-1)
         return logits, probs
 

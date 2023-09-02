@@ -1,7 +1,6 @@
 import math
 import torch
 from torch import nn
-from torch.nn.functional import log_softmax
 
 
 class PositionalEncoding(nn.Module):
@@ -48,17 +47,6 @@ class PositionwiseFeedForward(nn.Module):
 
     def forward(self, x):
         return self.w_2(self.dropout(self.w_1(x).relu()))
-
-
-class Generator(nn.Module):
-    "Define standard linear + softmax generation step."
-
-    def __init__(self, d_model, vocab):
-        super(Generator, self).__init__()
-        self.proj = nn.Linear(d_model, vocab)
-
-    def forward(self, x):
-        return self.proj(x)
 
 
 class LayerNorm(nn.Module):
