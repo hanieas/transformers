@@ -64,7 +64,7 @@ class Sampler(_Generator):
                 logits[indices_to_remove] = fill
             if top_k is not None:
                 logits[logits < torch.sort(
-                    logits)[0][top_k].unsqueeze(dim=-1)] = fill
+                    logits, descending=True)[0][top_k].unsqueeze(dim=-1)] = fill
             probs = scaled_softmax(logits, temperature)
             next_token = torch.multinomial(probs, num_samples=1)[0]
             x = _Generator.get_updated_x(x, next_token)
