@@ -4,21 +4,22 @@ from abc import ABC, abstractmethod
 from .utils import subsequent_mask, scaled_softmax
 
 
-def generate(model, x, iterations, temperature=None, top_p=None, top_k=None):
+def generate(model, x, iterations, stop_token=None, temperature=None, top_p=None, top_k=None):
     if temperature is None:
-        generator = Greedy(model, temperature, top_p, top_k)
+        generator = Greedy(model, stop_token, temperature, top_p, top_k)
     else:
-        generator = Sampler(model, temperature, top_p, top_k)
+        generator = Sampler(model, stop_token, temperature, top_p, top_k)
     return generator(x, iterations)
 
 
 class _Generator(ABC):
-    def __init__(self, model, temperature, top_p, top_k) -> None:
+    def __init__(self, model, stop_token, temperature, top_p, top_k) -> None:
         super(ABC).__init__()
         self.model = model
         self.temperature = temperature
         self.top_p = top_p
         self.top_k = top_k
+        self.stop_token = stop_token
 
     def __call__(self, x, iterations):
         all_logits = []
@@ -29,6 +30,8 @@ class _Generator(ABC):
             x = torch.cat([x, torch.zeros(1, 1).to(
                 torch.int64).fill_(next_word)], dim=1)
             all_logits.append(logits.unsqueeze(0))
+            if next_word == self.stop_token:
+                break
         return torch.cat(all_logits), x
 
     @abstractmethod
@@ -37,8 +40,8 @@ class _Generator(ABC):
 
 
 class Greedy(_Generator):
-    def __init__(self, model, temperature, top_p, top_k) -> None:
-        super().__init__(model, temperature, top_p, top_k)
+    def __init__(self, model, stop_token, temperature, top_p, top_k) -> None:
+        super().__init__(model, stop_token, temperature, top_p, top_k)
 
     def choose_next_word(self, _, probs):
         return torch.max(probs, dim=0)[1]
@@ -47,12 +50,12 @@ class Greedy(_Generator):
 class Sampler(_Generator):
     fill = -1e9
 
-    def __init__(self, model, temperature, top_p, top_k) -> None:
-        super().__init__(model, temperature, top_p, top_k)
+    def __init__(self, model, stop_token, temperature, top_p, top_k) -> None:
+        super().__init__(model, stop_token, temperature, top_p, top_k)
 
     def choose_next_word(self, logits, _):
         logits = logits / self.temperature
-        
+
         if self.top_k is not None and self.top_k > 0:
             self.top_k = min(self.top_k, logits.size(-1))  # Safety check
             # Remove all tokens with a probability less than the last token of the top-k

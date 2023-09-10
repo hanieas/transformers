@@ -38,8 +38,8 @@ class BaseDecoderGenerator(nn.Module):
         probs = log_softmax(logits, dim=-1)
         return logits, probs
 
-    def generate(self, x, iterations, temperature=None, top_p=None, top_k=None):
-        return generate(self, x, iterations, temperature=temperature, top_p=top_p, top_k=top_k)
+    def generate(self, x, iterations, stop_token=None, temperature=None, top_p=None, top_k=None):
+        return generate(self, x, iterations, stop_token=stop_token, temperature=temperature, top_p=top_p, top_k=top_k)
 
 
 class EncoderDecoder(nn.Module):
