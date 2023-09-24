@@ -1,7 +1,7 @@
 import torch
 from torch.nn.functional import softmax
 from abc import ABC, abstractmethod
-from .utils import subsequent_mask, scaled_softmax
+from .utils import subsequent_mask
 
 
 def generate(model, x, iterations, stop_token=None, temperature=None, top_p=None, top_k=None):
@@ -12,7 +12,7 @@ def generate(model, x, iterations, stop_token=None, temperature=None, top_p=None
     return generator(x, iterations)
 
 
-class _Generator(ABC):
+class Generator(ABC):
     def __init__(self, model, stop_token, temperature, top_p, top_k) -> None:
         super(ABC).__init__()
         self.model = model
@@ -39,7 +39,7 @@ class _Generator(ABC):
         pass
 
 
-class Greedy(_Generator):
+class Greedy(Generator):
     def __init__(self, model, stop_token, temperature, top_p, top_k) -> None:
         super().__init__(model, stop_token, temperature, top_p, top_k)
 
@@ -47,7 +47,7 @@ class Greedy(_Generator):
         return torch.max(probs, dim=0)[1]
 
 
-class Sampler(_Generator):
+class Sampler(Generator):
     fill = -1e9
 
     def __init__(self, model, stop_token, temperature, top_p, top_k) -> None:
@@ -78,5 +78,5 @@ class Sampler(_Generator):
 
             indices_to_remove = sorted_indices[sorted_indices_to_remove]
             logits[indices_to_remove] = self.fill
-        probs = scaled_softmax(logits, self.temperature)
+        probs = softmax(logits, dim=-1)
         return torch.multinomial(probs, num_samples=1)[0]

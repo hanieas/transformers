@@ -41,7 +41,3 @@ class Batch:
             tgt_mask.data
         )
         return tgt_mask
-
-
-def scaled_softmax(logits: torch.Tensor, t: float) -> torch.Tensor:
-    return nn.functional.softmax(logits / t, dim=-1)
