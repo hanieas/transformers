@@ -17,7 +17,7 @@ if local_x_transformers_module_path not in sys.path:
 ```
 
 ```python
-from x_transformers import BaseDecoderGenerator, Batch, subsequent_mask
+from x_transformers import BaseDecoderGenerator
 
 model = BaseDecoderGenerator(N, d_model, d_ff, vocab_size, heads, dropout, max_len)
 ```
