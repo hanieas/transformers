@@ -8,7 +8,7 @@ from .generators import generate
 
 
 class BaseDecoderGenerator(nn.Module):
-    def __init__(self, N, d_model, d_ff, vocab_size,  heads, dropout):
+    def __init__(self, N, d_model, d_ff, vocab_size,  heads, dropout, max_len=5000):
         super(BaseDecoderGenerator, self).__init__()
         self.d_model = d_model
         self.decoder = Decoder(
@@ -23,7 +23,8 @@ class BaseDecoderGenerator(nn.Module):
             ),
         )
         self.in_embed = Embeddings(d_model, vocab_size)
-        self.pe = PositionalEncoding(d_model=d_model, dropout=dropout)
+        self.pe = PositionalEncoding(
+            d_model=d_model, dropout=dropout, max_len=max_len)
         self.out_embed = nn.Linear(d_model, vocab_size)
 
         for p in self.parameters():
